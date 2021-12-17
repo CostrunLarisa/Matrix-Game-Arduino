@@ -53,6 +53,8 @@ bool isAlive = true;
 bool wasChecked = false;
 bool isInSetName = false;
 bool beginGame = false;
+bool nameWasSet = false;
+bool hasLost = false;
 volatile bool lockedIn = false;
 volatile bool lastSwState = false;
 volatile long long lastDebounce = 0;
@@ -66,7 +68,10 @@ int scoreStep = 5;
 int foundPoints = 0;
 int newScore =  0;
 int potValue;
-int dataOffset = 3;
+int offset = 3;
+int contrastValue = 0;
+int brightnessValue = 0;
+int matrixBrightnessValue = 0;
 const int figuresNumber = 1;
 const int numberOfCoord = 12;
 const int pointTypesSize = 3;
@@ -275,6 +280,7 @@ void updatePositions() {
     else {
       yPos = matrixSize - 1;
     }
+    
   }
   
   if (xPos != xLastPos || yPos != yLastPos) {
@@ -321,7 +327,7 @@ void joyStickMovement(int upperLimit) {
       joyMovedX = true;    
     }
     if (xValue >= minThreshold && xValue <= maxThreshold) {
-        joyMovedX = false;
+      joyMovedX = false;
     }
   }
   else {  
@@ -346,7 +352,7 @@ void joyStickMovement(int upperLimit) {
     }
     
     if (yValue >= minThreshold && yValue <= maxThreshold) {
-        joyMovedY = false;
+      joyMovedY = false;
     }
   } 
 }
@@ -408,18 +414,42 @@ void showMenu() {
     }
     else if (yPos == 1) {
       joyStickSettings(240, 10);
-      analogWrite(trigPin, xPosSettings);
-      EEPROM.update(0, xPosSettings);
+      if (xPosSettings != contrastValue) {
+        contrastValue = xPosSettings;
+        analogWrite(trigPin, xPosSettings);
+        lcd.clear();
+        lcd.setCursor(0, 0);
+        lcd.print(settings[yPos]);
+        lcd.setCursor(0, 1);
+        lcd.print(String(xPosSettings));
+        EEPROM.update(0, xPosSettings);
+      }
     }
     else if (yPos == 2) {
       joyStickSettings(15, 1);
-      lc.setIntensity(0, xPosSettings);
-      EEPROM.update(1, xPosSettings);      
+      if (xPosSettings != matrixBrightnessValue) {
+        matrixBrightnessValue = xPosSettings;
+        lcd.clear();
+        lcd.setCursor(0, 0);
+        lcd.print(settings[yPos]);
+        lc.setIntensity(0, xPosSettings);
+        lcd.setCursor(0, 1);
+        lcd.print(String(xPosSettings));
+        EEPROM.update(1, xPosSettings);
+      }
     }
     else if (yPos == 3) {
       joyStickSettings(240, 10);
-      analogWrite(brightPin, xPosSettings);
-      EEPROM.update(2, xPosSettings);      
+      if (xPosSettings != brightnessValue) {
+        brightnessValue = xPosSettings;
+        lcd.clear();
+        analogWrite(brightPin, xPosSettings);
+        lcd.setCursor(0, 0);
+        lcd.print(settings[yPos]);
+        lcd.setCursor(0, 1);
+        lcd.print(String(xPosSettings));
+        EEPROM.update(2, xPosSettings); 
+      }     
     }
     else if (yPos == 4) {
       inSettings = false;
@@ -427,6 +457,7 @@ void showMenu() {
   }
   else if (inSettings == true && lockedIn == true) {
     joyStickMovement(settingsSize);
+    //showMatrix(0);
   }
 }
 void playGame() {
@@ -458,7 +489,7 @@ void playGame() {
       if (livesNumber <= 0) {
         matrixUpdate = false;
         lcd.clear();
-          isAlive = false;
+        isAlive = false;
           //lockedIn = false;
           //menuState = true;
           //gameOver();     
@@ -472,26 +503,35 @@ void playGame() {
     if (levelIsDone() == 1 && livesNumber > 0) {
       showMatrix(0);
       showPlayerMatrix(0);
-      if(isInSetName == false) {
+      if(isInSetName == false && nameWasSet == false) {
         isNewHighscore();
       }
-      if (isInSetName == true) {
+      if (isInSetName == true && nameWasSet == false) {
         saveScore(0);
-      }    
+      }  
+      else if (isInSetName == false && nameWasSet == false) {
+        goNext();
+      }   
     }}
   } 
-  else if (isAlive == false) {
+  if (isAlive == false) {
     showMatrix(0);
     showPlayerMatrix(0);
-    //currentGameOverTime = millis();
-    //gameOver();
-    if ( isInSetName == false) {
-      gameOver();
+    if (!hasLost) {
+      currentTimeHighscore = millis();  
+      hasLost = true;             
+    }
+    if (isInSetName == false && nameWasSet == false) {
+      lcd.clear();      
       isNewHighscore();
     }
-    if (isInSetName == true) {
+    if (isInSetName == true && nameWasSet == false) {      
       saveScore(0);
-    }
+    }  
+    if ((isInSetName == false && nameWasSet == true && newScore == 0) || (isInSetName == false && nameWasSet == false && newScore == 0)) {
+      lcd.clear();
+      gameOver();
+    }  
   }
 }
 void showGameDisplay() {
@@ -520,7 +560,7 @@ void showGameDisplay() {
 }
 void joyStickSettings(int upperLimit, int step) {
   xValue = analogRead(xPin);
-  if (xValue < minThreshold && joyMovedX == false) {
+  if (xValue < minThreshold && joyMovedXSettings == false) {
       if (xPosSettings < upperLimit - 1) {
         xPosSettings += step;
       } 
@@ -530,8 +570,8 @@ void joyStickSettings(int upperLimit, int step) {
       joyMovedXSettings = true;
     }
     
-  if (xValue > maxThreshold && joyMovedX == false) {
-      if (xPos > 0) {
+  if (xValue > maxThreshold && joyMovedXSettings == false) {
+      if (xPosSettings > step) {
         xPosSettings -= step;
       }
       else {
@@ -540,7 +580,7 @@ void joyStickSettings(int upperLimit, int step) {
       joyMovedXSettings = true;    
     }
   if (xValue >= minThreshold && xValue <= maxThreshold) {
-      joyMovedXSettings = false;
+    joyMovedXSettings = false;
   }
 }
 void showMatrix(int light) { 
@@ -580,20 +620,23 @@ void gameOver() {
   lcd.print("You died!:(");
   //if (millis() - currentGameOverTime  > debounceInterval) {
     lockedIn = false;
-    currentGameOverTime = millis();
-    isNewHighscore();
+    //isNewHighscore();
     maxLevels = currentLevel;
-    //menuState = true;
+    menuState = true;
     lockedIn = false;
     isAlive = true;
     playerTurn = false;
     beginGame = false;
+    nameWasSet = false;
+    isInSetName =  false;
+    newScore = 0;
     currentScore = 0;
     currentLevel = 1;
     livesNumber = 5;
+    previousLevel = -1;
+    previousScore = -1;    
  // }
 }
-
 // Check if the player remade the figure, 
 // If so, then level is done
 int levelIsDone() {
@@ -615,7 +658,6 @@ void isNewHighscore () {
     Player* player = highScore[i];
     index = i;
     // If the current player obtained a new highscore
-    
     if(currentScore > 3) {
       Serial.println(currentScore);
       newScoreStr = "Congrats!"+String(currentScore);
@@ -623,32 +665,25 @@ void isNewHighscore () {
       break;
     } 
   }
-  if (millis() - currentGameOverTime > debounceInterval) {
-    currentTimeHighscore = millis();
+  lcd.setCursor(3, 0);        
+  lcd.print(newScoreStr);
+  lcd.setCursor(1, 1);
+  lcd.print("New highscore!");   
+  Serial.println(millis() - currentTimeHighscore); 
+  if (newScore == 1 && millis() - currentTimeHighscore > 5000) {
     lcd.clear();
-    lcd.setCursor(3, 0);        
-    lcd.print(newScoreStr);
-    lcd.setCursor(1, 1);
-    lcd.print("New highscore!");        
-  }
-
-  if (newScore == 1 && millis() - currentTimeHighscore > 200) {
-    saveScore(index);
-    newScore = 0;     
-  }
-  else if (newScore == 0) {
-    menuState = true;
+    isInSetName = true;    
   }
 }
 
-void saveToMemory(int offset,String name, long long score) {
+void saveToMemory(String name, long long score) {
   byte len = name.length();
   for (int i = 0; i < len; i++)
   {
-    EEPROM.write(offset + i, name[i]);
+    EEPROM.update(offset + i, name[i]);
   }
-  EEPROM.write(offset + len, score);  
-  dataOffset += 5;
+  EEPROM.update(offset + len, score);  
+  offset += 5;
   Serial.println("Here");
 }
 void goNext() {
@@ -702,9 +737,10 @@ void saveScore(int index) {
     String newName = name[0] + name[1] + name[2] + name[3];
     highScore[index]->setScore(currentScore);
     highScore[index]->setName(newName);
-    saveToMemory(dataOffset,newName,currentScore);   
-    newScore = 0; 
-    menuState = true;
+    saveToMemory(newName,currentScore);   
+    newScore = 0;
+    isInSetName = false;
+    nameWasSet = true; 
     lockedIn = false;
   }
 }
@@ -721,4 +757,10 @@ void showLetter(int start, int startLetter) {
   lcd.print(" ");
   delay(500);
 }
-
+void showAllLeds(int light) {
+  for (int i = 0; i < matrixSize; i++) {
+    for (int j = 0; j < matrixSize; j++) {
+      lc.setLed(0, i, j, light);
+    }
+  }
+}
