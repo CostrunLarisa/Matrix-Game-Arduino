@@ -407,16 +407,18 @@ void showMenu() {
       lcd.print(startingLevel);
       joyStickSettings(maxLevels + 1, 1);
       int newLevel = xPosSettings;
-      if (newLevel != currentLevel) {
+      if (newLevel != currentLevel) { 
+        if (newLevel != 0) {       
         currentLevel = newLevel;
         //Increase the difficulty of the level     
-        moveInterval = 180 - 10 * (newLevel - 1);
+        moveInterval = 180 - 10 * (newLevel - 1);       
         lcd.clear();
+        lcd.setCursor(0, 0);
+        lcd.write(leftArrow);
+        lcd.setCursor(15, 0);
+        lcd.write(rightArrow);
+        }
       }
-      lcd.setCursor(0, 0);
-      lcd.write(leftArrow);
-      lcd.setCursor(15, 0);
-      lcd.write(rightArrow);
     }
     // Set the contrast of the lcd.
     else if (yPos == 1) {
