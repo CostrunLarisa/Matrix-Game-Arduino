@@ -2,11 +2,10 @@
 #define potPin A2
 #define clockPin 11
 #define loadPin 3
-#define buzzerPin 10
 #define brightPin 6
 #define RS 13
 #define enable 7
-#define d4 5
+#define d4 10
 #define d5 4
 #define d6 9
 #define d7 8
@@ -30,4 +29,10 @@
 #define numberOfCoord 12
 #define nameSize 4
 #define alphabetSize 26
-#define buzzerPin 13
+#define buzzerPin 5
+#define rightArrow  0b01111110
+#define leftArrow 0b01111111
+#define upArrow 0b01011110
+#define downArrow 0b01110110
+#define matrixBrightUpperLimit 15
+#define matrixBrightStep 1

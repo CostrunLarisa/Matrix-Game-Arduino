@@ -2,6 +2,7 @@
 #include <EEPROM.h>
 #include "LedControl.h"
 #include "game_constants.h"
+#include "buzzer_notes.h"
 #include "player.h"
 int xValue = 0;
 int yValue = 0;
@@ -10,16 +11,12 @@ byte xPos = 0;
 byte yPos = 0;
 byte xLastPos = 0;
 byte yLastPos = 0;
-byte rightArrow = 0b01111110;
-byte leftArrow = 0b01111111;
-byte upArrow = 0b01011110;
-byte downArrow = 0b01110110;
 int matrixBrightness = 2;
 int maxLevels = 1;
+int buzzerTone = 123;
 unsigned long lastMoved = 0;
 int moveInterval = 180;
 unsigned long  currentMillis = 0;
-int buzzerTone = 1000;
 bool matrixUpdate = true;
 bool menuState = true;
 bool joyMovedX = false;
@@ -51,11 +48,9 @@ int potValue;
 int offset = 3;
 int contrastValue = 0;
 int brightnessValue = 0;
-int matrixBrightUpperLimit = 15;
-int matrixBrightStep = 1;
 int matrixBrightnessValue = 0;
 int indexAbout = 0;
-int previousLives = 5;
+byte previousLives = 5;
 byte indexOfHighscore = 0;
 String name[nameSize] = {"", "", "", ""};
 char * aboutInfo = "Brainstorming Game.Created by Larisuk.Find me at https://github.com/Larisuk/Matrix-Game-Arduino.";
@@ -63,6 +58,7 @@ unsigned long currentElapsedTime = 0;
 unsigned long currentGameOverTime = 0;
 unsigned long currentTimeHighscore = 0;
 unsigned long currentAboutMillis = 0;
+unsigned long introMillis = 0;
 LedControl lc = LedControl(dinPin, clockPin, loadPin, 1);
 LiquidCrystal lcd(RS, enable, d4, d5, d6, d7);
 bool matrix[matrixSize][matrixSize] = {
@@ -141,32 +137,31 @@ char* settings[settingsSize] = {
   "Brightness",
   "Back"
 };
+int melody[] = {NOTE_C4, NOTE_G3, NOTE_G3, NOTE_A3, NOTE_G3,0,NOTE_B3, NOTE_C4};
+byte noteDurations[] = {4,8,8,4,4,4,4,4};
 Player* highScore[highScoreSize] = {
   new Player("", 0), new Player("", 0), new Player("", 0)
 };
+
 void setup() {
   lc.shutdown(0, false);
   lc.setIntensity(0, matrixBrightness);
   lcd.begin(16, 2);
-  lcd.print(">>Welcome to a");
+  lcd.print(F(">>Welcome to a"));
   lcd.setCursor(0, 1);
-  lcd.print("nerdy world!<<");
+  lcd.print(F("nerdy world!<<"));
   lc.clearDisplay(0);
   pinMode(potPin, INPUT);
   pinMode(swPin, INPUT_PULLUP);
   pinMode(xPin, INPUT);
   pinMode(yPin, INPUT);
   pinMode(clockPin, OUTPUT);
- //pinMode(trigPin, OUTPUT);
+  //pinMode(trigPin, OUTPUT);
   //EEPROM.update(0, 120);
   //analogWrite(trigPin, EEPROM.read(0));
   lc.setIntensity(0, EEPROM.read(1));
   analogWrite(brightPin, EEPROM.read(2));
   //analogWrite(trigPin, 120);
-  /*
-  saveToMemory("abc0", 10);
-  saveToMemory("abc1", 10);
-  saveToMemory("abc2", 10);*/
   int index = 0;
   for (int i = 3; i <= 15; i += 6) {
     String name = "";
@@ -176,21 +171,27 @@ void setup() {
     highScore[index] = new Player(name, readIntFromEEPROM(i + 4));
     index += 1;
   }
+
   attachInterrupt(digitalPinToInterrupt(2), updateSW, FALLING);
   Serial.begin(9600);
 }
 
-void loop() {
-  //potValue = analogRead(potPin);
-  //analogWrite(trigPin, 100);  
+void loop() {  
   //If the menu is on, then scroll through menu options  
   if (menuState == true) {
     // If the board was not already turned on
-    if (millis() >= showGreetingInterval && greetingMessage == true) {
+    if (millis() > showGreetingInterval && greetingMessage == true) {
       lcd.clear();
       lcd.setCursor(0, 1);
       greetingMessage = false;
+      indexAbout = 0;
       joyMovedX = true;
+    }
+    else if(millis() <= showGreetingInterval) {
+      /*if (millis() - introMillis > showGreetingInterval / 8) {
+        tone(buzzerPin, melody[indexAbout + 1], showGreetingInterval / 8);
+        introMillis = millis();
+      }*/     
     }
     if (greetingMessage == false) {
       showMenu(); 
@@ -354,7 +355,7 @@ void showMenu() {
       lcd.setCursor(0, 0);
       lcd.print(highScore[yPos]->getName());
       lcd.setCursor(5, 0);
-      lcd.print("-");
+      lcd.print(F("-"));
       lcd.setCursor(7, 0);
       lcd.print(highScoreSize - yPos);
       lcd.setCursor(0, 1);
@@ -493,8 +494,7 @@ void playGame() {
       currentElapsedTime = millis();
       beginGame = true;
     }
-    if (millis() - lastMoved > moveInterval) {
-      lastMoved = millis();
+    
       if (millis() - currentElapsedTime < showFigureInterval && playerTurn == false ) {
         lc.clearDisplay(0);
         showMatrix(1);
@@ -505,6 +505,8 @@ void playGame() {
         lockedIn = false;
         playerTurn = true;
       }
+    if (millis() - lastMoved > moveInterval) {
+      lastMoved = millis();
       if (playerTurn == true && lockedIn == false) {
         updatePositions();
       }
@@ -672,7 +674,7 @@ void gameOver() {
   showMatrix(0);
   showPlayerMatrix(0);
   lcd.setCursor(0, 0);
-  lcd.print("You died!:(");
+  lcd.print(F("You died!:("));
   lcd.setCursor(0, 1);
   lcd.print("Score:" + String(currentScore));
   lockedIn = false;
@@ -692,6 +694,13 @@ void gameOver() {
   livesNumber = 5;
   previousLevel = -1;
   previousScore = -1;
+  for(int thisNote = 0; thisNote < 8; thisNote++){
+    int noteDuration = 1000 / noteDurations[thisNote];
+    tone(buzzerPin, melody[thisNote], noteDuration);
+    int pauseBetweenNotes = noteDuration * 1.30;
+    delay(pauseBetweenNotes);
+    noTone(pauseBetweenNotes);
+  }
 }
 // Check if the player remade the figure by verifying the marked positions
 int levelIsDone() {
@@ -707,6 +716,7 @@ int levelIsDone() {
 void isNewHighscore () {
   int index;
   String newScoreStr;
+  playerTurn = false;
   // Check f the player bet one of the highscores
   getMaximum();
   if (newScore == 1) {
@@ -714,13 +724,18 @@ void isNewHighscore () {
     lcd.setCursor(3, 0);
     lcd.print(newScoreStr);
     lcd.setCursor(1, 1);
-    lcd.print("New highscore!");
+    lcd.print(F("New highscore!"));
+    if (millis() - introMillis > showGreetingInterval / 8) {
+    tone(buzzerPin, melody[indexAbout + 1], showGreetingInterval / 8);
+    introMillis = millis();
+    }  
   }
   //If a new highscore was established then show congratulation message for 5 seconds
   if (newScore == 1 && millis() - currentTimeHighscore > showGreetingInterval) {
     lcd.clear();
     isInSetName = true;
     lockedIn = false;
+    indexAbout = 0;       
   }
   if (newScore == 0) {
     lockedIn = false;
@@ -743,7 +758,7 @@ void goNext() {
   lcd.setCursor(14, 0);
   lcd.write(rightArrow);
   lcd.setCursor(6, 1);
-  lcd.print("Continue?");
+  lcd.print(F("Continue?"));
   joyStickMovement(2);
   // If player chose the next level
   // Then increase the current level, add a bonus to the score
@@ -800,11 +815,11 @@ void goNext() {
       lcd.clear();
     }
     lcd.setCursor(2, 0);
-    lcd.print("No");
+    lcd.print(F("No"));
     lcd.setCursor(14, 0);
     lcd.write(rightArrow);
     lcd.setCursor(6, 1);
-    lcd.print("Continue?");
+    lcd.print(F("Continue?"));
     joyStickMovement(2);
   }
   else if (xPos == 0 && lockedIn == false && joyMovedX == true) {
@@ -812,11 +827,11 @@ void goNext() {
       lcd.clear();
     }
     lcd.setCursor(11, 0);
-    lcd.print("Yes");
+    lcd.print(F("Yes"));
     lcd.setCursor(1, 0);
     lcd.write(leftArrow);
     lcd.setCursor(6, 1);
-    lcd.print("Continue?");
+    lcd.print(F("Continue?"));
     joyStickMovement(2);
   }
 }
@@ -824,7 +839,7 @@ void goNext() {
 // The name has maximum 4 letters.
 void saveScore(int index) {
   lcd.setCursor(4, 0);
-  lcd.print("OK");
+  lcd.print(F("OK"));
   if (lockedIn == false) {
     int lastXPos = xPos;
     joyStickMovement(nameSize + 1);
@@ -834,14 +849,14 @@ void saveScore(int index) {
     for (int i = 0 ; i < nameSize; i++) {
       lcd.setCursor(i, 0);
       if ( i == xPos) {
-        lcd.print("_");
+        lcd.print(F("_"));
       }
       else {
         lcd.print(name[i]);
       }
     }
     lcd.setCursor(4, 0);
-    lcd.print("OK");
+    lcd.print(F("OK"));
     lcd.setCursor(0, 1);
     lcd.write(leftArrow);
     lcd.setCursor(15, 1);
@@ -859,9 +874,9 @@ void saveScore(int index) {
     }
     name[xPos] = char(lettersArray[yPos]);
     lcd.setCursor(0, 1);
-    lcd.print("");
+    lcd.print(F(""));
     lcd.setCursor(15, 1);
-    lcd.print("");
+    lcd.print(F(""));
     lcd.setCursor(15, 0);
     lcd.write(upArrow);
     lcd.setCursor(15, 1);
@@ -895,7 +910,7 @@ void showAbout() {
 }
 void showLetter(int start, int startLetter) {
   lcd.setCursor(start, 0);
-  lcd.print(" ");
+  lcd.print(F(" "));
   for (int letter = startLetter; letter <= startLetter + 15; letter++) {
     lcd.print(aboutInfo[letter]);
   }
