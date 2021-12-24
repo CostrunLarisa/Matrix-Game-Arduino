@@ -34,5 +34,7 @@ First, a figure is shown on the matrix displayed for 10 seconds, containing poin
 - 15x2 lcd (displays the menu of the game)
 - joystick (used to navigate through the menu and to move in the game)
 - buzzer (for loosing the game and establishing a new highscoe sound).
+## Video of the game
+https://www.youtube.com/watch?v=3CC1-aWnnN8&ab_channel=BiancaLarisa
 ## Setup picture  
 ![alt text](https://user-images.githubusercontent.com/41392462/145302452-fbd130a6-b22b-41c2-a7ef-3f7df38b8b08.jpeg)
