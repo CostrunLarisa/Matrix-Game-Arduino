@@ -10,22 +10,21 @@ Nerdy game which has the purpose to test your intelligence. Do you think you can
  - About: informations about the game (name, author and github link).
   If one option is played once more after selected, then the player can scroll back through the menu.
   ### Submenu - settings
-  Consists:
+  Contains:
   - Starting level: sets the level one player wants to start from.
   - Contrast: sets the contrast of the lcd (increased by 10, the maximum reached value is 240).
   - Brightness: sets the brightness of the lcd (increased by 10, the maximum reached value is 240).
   - Matrix brightness: sets the intensity of the matrix (increased by 1, the maximum reached value is 15).
   - Back: once pressed, displays the main menu.
-  The contrast, the brightness and matrix brightness are saved in EEPROM, so everytime the Arduino Uno restarts the values will remain the same.
+  The contrast, the brightness and matrix brightness are saved in EEPROM, so everytime the Arduino Uno restarts the values will remain the same. If one option is selected, then the player has to set the value scrolling on X-axis.
   ### Submenu - highscore
   Displays the top 3 highscores, saved in EEPROM with the name and score reached by one. Entering into this setting occus only if he beats one of those already saved. 
 ## Implementation Details
 
 ## Game logic
-First, a figure is shown on the matrix displayed for 10 seconds, containing points in different positions wih different types of blinking (depending on the difficulty of the level). Then, the player needs to remember the location of the points and their type. Based on that, he is navigating on the matrix with the joystick (left-right, top-bottom and diagonally) and presses the button of the joystick to fix the point on the matrix. After fixing the point, he can use the y-axis to chose the blinking type and press once more the button to validate that choice for the point. If it was a good move, the score will increase and the point will remain on the matrix, otherwise the number of lives will be decreased. While playing, the number of lives, the score and level are displayed on the LCD.
-### How to play
-The game starts with a figure shown on the matrix for 5 seconds and the player must remake it by slecting positions for the point. When all the points from the figure are selected, if the player has more than 1 live, then he is asked if he goes to the next level.  
-## #Components
+First, a figure is shown on the matrix displayed for 10 seconds, containing points in different positions wih different types of blinking (depending on the difficulty of the level). Then, the player needs to remember the location of the points and their type. Based on that, he is navigating on the matrix with the joystick (left-right, top-bottom and diagonally) and presses the button of the joystick to fix the point on the matrix. After fixing the point, he can use the y-axis to chose the blinking type and press once more the button to validate that choice for the point. If it was a good move, the score will increase and the point will remain on the matrix, otherwise the number of lives will be decreased. While playing, the number of lives, the score and level are displayed on the LCD and after each passed level the player receives an exta life and extra points equal to the level number(e.g level 2 = 2 extra points). The game ends when the player doesn't have any lives. This action is possible, because the difficulty of the game reaches a point where the level cannot be passed (the moving speed of the point becomes too high). After each level, if a new highscore has been established then the player is required to save his name and a congratulation message is shown on display with a short melody from the buzzer
+
+## Components
 - ARDUINO UNO board
 - 8x8 matrix (used to play the game)
 - 15x2 lcd (displays the menu of the game)
