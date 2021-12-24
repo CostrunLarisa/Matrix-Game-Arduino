@@ -52,16 +52,16 @@ int matrixBrightnessValue = 0;
 int indexAbout = 0;
 byte previousLives = 5;
 byte indexOfHighscore = 0;
-String name[nameSize] = {"", "", "", ""};
+String name[NAMESIZE] = {"", "", "", ""};
 char * aboutInfo = "Brainstorming Game.Created by Larisuk.Find me at https://github.com/Larisuk/Matrix-Game-Arduino.";
 unsigned long currentElapsedTime = 0;
 unsigned long currentGameOverTime = 0;
 unsigned long currentTimeHighscore = 0;
 unsigned long currentAboutMillis = 0;
 unsigned long introMillis = 0;
-LedControl lc = LedControl(dinPin, clockPin, loadPin, 1);
-LiquidCrystal lcd(RS, enable, d4, d5, d6, d7);
-bool matrix[matrixSize][matrixSize] = {
+LedControl lc = LedControl(DINPIN, CLOCKPIN, LOADPIN, 1);
+LiquidCrystal lcd(RS, ENABLE, D4, D5, D6, D7);
+bool matrix[MATRIXSIZE][MATRIXSIZE] = {
   {0, 0, 0, 0, 0, 0, 0, 0},
   {0, 0, 0, 0, 0, 0, 0, 0},
   {0, 0, 0, 0, 0, 0, 0, 0},
@@ -71,7 +71,7 @@ bool matrix[matrixSize][matrixSize] = {
   {0, 0, 0, 0, 0, 0, 0, 0},
   {0, 0, 0, 0, 0, 0, 0, 0}
 };
-bool playerMatrix[matrixSize][matrixSize] = {
+bool playerMatrix[MATRIXSIZE][MATRIXSIZE] = {
   {0, 0, 0, 0, 0, 0, 0, 0},
   {0, 0, 0, 0, 0, 0, 0, 0},
   {0, 0, 0, 0, 0, 0, 0, 0},
@@ -81,7 +81,7 @@ bool playerMatrix[matrixSize][matrixSize] = {
   {0, 0, 0, 0, 0, 0, 0, 0},
   {0, 0, 0, 0, 0, 0, 0, 0}
 };
-byte lettersArray[alphabetSize] = {
+byte lettersArray[ALPHABETSIZE] = {
   B1000001, //A
   B1000010, //B
   B1000011, //C
@@ -109,7 +109,7 @@ byte lettersArray[alphabetSize] = {
   B1011001, //Y
   B1011010, //Z
 };
-byte figures[figuresNumber][numberOfCoord][2] = {
+byte figures[FIGURESNUMBER][NUMBEROFCOORD][2] = {
   {{4, 0}, {4, 1}, {4, 2}, {4, 3}, {4, 4}, {4, 5}, {4, 6}, {4, 7}, {5, 0}, {5, 1}, {5, 2}, {5, 3}},
   {{0, 1}, {0, 2}, {0, 3}, {0, 4}, {0, 5}, {0, 6}, {1, 6}, {2, 6}, {3, 6}, {4, 6}, {5, 6}, {6, 6}},
   {{0, 1}, {1, 1}, {2, 1}, {3, 1}, {0, 6}, {1, 6}, {2, 6}, {3, 6}, {5, 2}, {5, 3}, {5, 4}, {5, 5}},
@@ -124,13 +124,13 @@ byte figures[figuresNumber][numberOfCoord][2] = {
   {{3, 3}, {1, 4}, {0, 5}, {0, 2}, {6, 1}, {7, 4}, {7, 3}, {2, 0}, {1, 0}, {2, 2}, {4, 2}, {5, 2}}
 };
 
-char* menu[menuSize] = {
+char* menu[MENUSIZE] = {
   "Start game",
   "Highscore",
   "Settings",
   "About"
 };
-char* settings[settingsSize] = {
+char* settings[SETTINGSSIZE] = {
   "Starting level",
   "Contrast",
   "Matrix light",
@@ -139,7 +139,7 @@ char* settings[settingsSize] = {
 };
 int melody[] = {NOTE_C4, NOTE_G3, NOTE_G3, NOTE_A3, NOTE_G3,0,NOTE_B3, NOTE_C4};
 byte noteDurations[] = {4,8,8,4,4,4,4,4};
-Player* highScore[highScoreSize] = {
+Player* highScore[HIGHSCORESIZE] = {
   new Player("", 0), new Player("", 0), new Player("", 0)
 };
 
@@ -151,17 +151,15 @@ void setup() {
   lcd.setCursor(0, 1);
   lcd.print(F("nerdy world!<<"));
   lc.clearDisplay(0);
-  pinMode(potPin, INPUT);
-  pinMode(swPin, INPUT_PULLUP);
-  pinMode(xPin, INPUT);
-  pinMode(yPin, INPUT);
-  pinMode(clockPin, OUTPUT);
+  pinMode(POTPIN, INPUT);
+  pinMode(SWPIN, INPUT_PULLUP);
+  pinMode(XPIN, INPUT);
+  pinMode(YPIN, INPUT);
+  pinMode(CLOCKPIN, OUTPUT);
   //pinMode(trigPin, OUTPUT);
-  //EEPROM.update(0, 120);
   //analogWrite(trigPin, EEPROM.read(0));
   lc.setIntensity(0, EEPROM.read(1));
-  analogWrite(brightPin, EEPROM.read(2));
-  //analogWrite(trigPin, 120);
+  analogWrite(BRIGHTPIN, EEPROM.read(2));
   int index = 0;
   for (int i = 3; i <= 15; i += 6) {
     String name = "";
@@ -171,27 +169,20 @@ void setup() {
     highScore[index] = new Player(name, readIntFromEEPROM(i + 4));
     index += 1;
   }
-
   attachInterrupt(digitalPinToInterrupt(2), updateSW, FALLING);
-  Serial.begin(9600);
+  //Serial.begin(9600);
 }
 
 void loop() {  
   //If the menu is on, then scroll through menu options  
   if (menuState == true) {
     // If the board was not already turned on
-    if (millis() > showGreetingInterval && greetingMessage == true) {
+    if (millis() > SHOWGREETINGINTERVAL && greetingMessage == true) {
       lcd.clear();
       lcd.setCursor(0, 1);
       greetingMessage = false;
       indexAbout = 0;
       joyMovedX = true;
-    }
-    else if(millis() <= showGreetingInterval) {
-      /*if (millis() - introMillis > showGreetingInterval / 8) {
-        tone(buzzerPin, melody[indexAbout + 1], showGreetingInterval / 8);
-        introMillis = millis();
-      }*/     
     }
     if (greetingMessage == false) {
       showMenu(); 
@@ -205,19 +196,19 @@ void loop() {
 }
 // Turn on the led while point is moving on the matrix
 void updateDisplay() {
-  for (int row = 0; row < matrixSize; row++) {
-    for (int col = 0; col < matrixSize; col++) {
+  for (int row = 0; row < MATRIXSIZE; row++) {
+    for (int col = 0; col < MATRIXSIZE; col++) {
       lc.setLed(0, row, col, matrix[row][col]);
     }
   }
 }
 void updatePositions() {
-  xValue = analogRead(xPin);
-  yValue = analogRead(yPin);
+  xValue = analogRead(XPIN);
+  yValue = analogRead(YPIN);
   xLastPos = xPos;
   yLastPos = yPos;
-  if (xValue < minThreshold) {
-    if (xPos < matrixSize - 1) {
+  if (xValue < MINTHRESHOLD) {
+    if (xPos < MATRIXSIZE - 1) {
       xPos++;
     }
     else {
@@ -225,17 +216,17 @@ void updatePositions() {
     }
   }
 
-  if (xValue > maxThreshold) {
+  if (xValue > MAXTHRESHOLD) {
     if (xPos > 0) {
       xPos--;
     }
     else {
-      xPos = matrixSize - 1;
+      xPos = MATRIXSIZE - 1;
     }
   }
 
-  if (yValue > maxThreshold) {
-    if (yPos < matrixSize - 1) {
+  if (yValue > MAXTHRESHOLD) {
+    if (yPos < MATRIXSIZE - 1) {
       yPos++;
     }
     else {
@@ -243,12 +234,12 @@ void updatePositions() {
     }
   }
 
-  if (yValue < minThreshold) {
+  if (yValue < MINTHRESHOLD) {
     if (yPos > 0) {
       yPos--;
     }
     else {
-      yPos = matrixSize - 1;
+      yPos = MATRIXSIZE - 1;
     }
 
   }
@@ -264,7 +255,7 @@ void updatePositions() {
   }
 }
 void updateSW() {
-  if (millis() - lastDebounce > debounceInterval) {
+  if (millis() - lastDebounce > DEBOUNCEINTERVAL) {
     lastSwState = lockedIn;
     lockedIn = !lockedIn;
     // If a point was selected on the matrix
@@ -278,12 +269,12 @@ void updateSW() {
 // Universal joyStickMovement for different x and y positions
 // In order to work properly, the function gets the maximum limit of the position
 void joyStickMovement(int upperLimit) {
-  xValue = analogRead(xPin);
-  yValue = analogRead(yPin);
+  xValue = analogRead(XPIN);
+  yValue = analogRead(YPIN);
   xLastPos = xPos;
   yLastPos = yPos;
   if (lockedIn == false) {
-    if (xValue < minThreshold && joyMovedX == false) {
+    if (xValue < MINTHRESHOLD && joyMovedX == false) {
       if (xPos < upperLimit - 1) {
         xPos++;
       }
@@ -293,7 +284,7 @@ void joyStickMovement(int upperLimit) {
       joyMovedX = true;
     }
 
-    if (xValue > maxThreshold && joyMovedX == false) {
+    if (xValue > MAXTHRESHOLD && joyMovedX == false) {
       if (xPos > 0) {
         xPos--;
       }
@@ -302,12 +293,12 @@ void joyStickMovement(int upperLimit) {
       }
       joyMovedX = true;
     }
-    if (xValue >= minThreshold && xValue <= maxThreshold) {
+    if (xValue >= MINTHRESHOLD && xValue <= MAXTHRESHOLD) {
       joyMovedX = false;
     }
   }
   else {
-    if (yValue > maxThreshold && joyMovedY == false) {
+    if (yValue > MAXTHRESHOLD && joyMovedY == false) {
       if (yPos < upperLimit - 1) {
         yPos++;
       }
@@ -317,7 +308,7 @@ void joyStickMovement(int upperLimit) {
       joyMovedY = true;
     }
 
-    if (yValue < minThreshold && joyMovedY == false) {
+    if (yValue < MINTHRESHOLD && joyMovedY == false) {
       if (yPos > 0) {
         yPos--;
       }
@@ -327,7 +318,7 @@ void joyStickMovement(int upperLimit) {
       joyMovedY = true;
     }
 
-    if (yValue >= minThreshold && yValue <= maxThreshold) {
+    if (yValue >= MINTHRESHOLD && yValue <= MAXTHRESHOLD) {
       joyMovedY = false;
     }
   }
@@ -339,25 +330,25 @@ void showMenu() {
     lcd.setCursor(0, 1);
     lcd.print(menu[xPos]);
     lcd.setCursor(15, 0);
-    lcd.write(rightArrow);
+    lcd.write(RIGHTARROW);
     lcd.setCursor(0, 0);
-    lcd.write(leftArrow);
+    lcd.write(LEFTARROW);
     yPos = 0;
   }
   // If we are in the submenu, show on lcd the submenu options
   else if (joyMovedY == true ) {
     lcd.clear();
     lcd.setCursor(15, 0);
-    lcd.write(upArrow);
+    lcd.write(UPARROW);
     lcd.setCursor(15, 1);
-    lcd.write(downArrow);
+    lcd.write(DOWNARROW);
     if (xPos == 1) {
       lcd.setCursor(0, 0);
       lcd.print(highScore[yPos]->getName());
       lcd.setCursor(5, 0);
       lcd.print(F("-"));
       lcd.setCursor(7, 0);
-      lcd.print(highScoreSize - yPos);
+      lcd.print(HIGHSCORESIZE - yPos);
       lcd.setCursor(0, 1);
       lcd.print(String(highScore[yPos]->getScore()));
     }
@@ -376,10 +367,10 @@ void showMenu() {
       menuState = false;
     }
     if (xPos == 1) {
-      joyStickMovement(highScoreSize);
+      joyStickMovement(HIGHSCORESIZE);
     }
     if (xPos == 2) {
-      joyStickMovement(settingsSize);
+      joyStickMovement(SETTINGSSIZE);
       inSettings = true;
       yPos = 0;
     }
@@ -391,7 +382,7 @@ void showMenu() {
   else if (lockedIn == false && inSettings == false) {
     showWholeMatrix(0);
     indexAbout = 0;
-    joyStickMovement(menuSize);
+    joyStickMovement(MENUSIZE);
   }
   // If the player is in the settings submenu
   else if (inSettings == true && lockedIn == false) {
@@ -414,23 +405,23 @@ void showMenu() {
         moveInterval = 180 - 10 * (newLevel - 1);       
         lcd.clear();
         lcd.setCursor(0, 0);
-        lcd.write(leftArrow);
+        lcd.write(LEFTARROW);
         lcd.setCursor(15, 0);
-        lcd.write(rightArrow);
+        lcd.write(RIGHTARROW);
         }
       }
     }
     // Set the contrast of the lcd.
     else if (yPos == 1) {
-      joyStickSettings(brightnessUpperLimit, brightnessStep);
+      joyStickSettings(BRIGHTNESSUPPERLIMIT, BRIGHTNESSSTEP);
       lcd.setCursor(0, 0);
       lcd.print(settings[yPos]);
       lcd.setCursor(0, 1);
       lcd.print(String(xPosSettings));
       lcd.setCursor(14, 1);
-      lcd.write(leftArrow);
+      lcd.write(LEFTARROW);
       lcd.setCursor(15, 1);
-      lcd.write(rightArrow);
+      lcd.write(RIGHTARROW);
       int newContrast = xPosSettings;
       if (newContrast != contrastValue) {
         contrastValue = newContrast;
@@ -441,7 +432,7 @@ void showMenu() {
     }
     // Set the matrix brightness.
     else if (yPos == 2) {
-      joyStickSettings(matrixBrightUpperLimit, matrixBrightStep);
+      joyStickSettings(MATRIXBRIGHTUPPERLIMIT, MATRIXBRIGHTSTEP);
       int newMatrixBrightness = xPosSettings;
       if (newMatrixBrightness != matrixBrightnessValue) {
         matrixBrightnessValue = xPosSettings;
@@ -452,28 +443,28 @@ void showMenu() {
         lcd.setCursor(0, 1);
         lcd.print(String(matrixBrightnessValue));
         lcd.setCursor(14, 1);
-        lcd.write(leftArrow);
+        lcd.write(LEFTARROW);
         lcd.setCursor(15, 1);
-        lcd.write(rightArrow);
+        lcd.write(RIGHTARROW);
         EEPROM.update(1, matrixBrightnessValue);
       }
     }
     // Set the brightness of the lcd.
     else if (yPos == 3) {
-      joyStickSettings(brightnessUpperLimit, brightnessStep);
+      joyStickSettings(BRIGHTNESSUPPERLIMIT, BRIGHTNESSSTEP);
       int newBrightness = xPosSettings;
       if (newBrightness != brightnessValue) {
         brightnessValue = xPosSettings;
         lcd.clear();
-        analogWrite(brightPin, brightnessValue);
+        analogWrite(BRIGHTPIN, brightnessValue);
         lcd.setCursor(0, 0);
         lcd.print(settings[yPos]);
         lcd.setCursor(0, 1);
         lcd.print(String(brightnessValue));
         lcd.setCursor(14, 1);
-        lcd.write(leftArrow);
+        lcd.write(LEFTARROW);
         lcd.setCursor(15, 1);
-        lcd.write(rightArrow);
+        lcd.write(RIGHTARROW);
         EEPROM.update(2, brightnessValue);
       }
     }
@@ -484,7 +475,7 @@ void showMenu() {
     }
   }
   else if (inSettings == true && lockedIn == true) {
-    joyStickMovement(settingsSize);
+    joyStickMovement(SETTINGSSIZE);
     xPosSettings = 0;
   }
 }
@@ -497,11 +488,11 @@ void playGame() {
       beginGame = true;
     }
     
-      if (millis() - currentElapsedTime < showFigureInterval && playerTurn == false ) {
+      if (millis() - currentElapsedTime < SHOWFIGUREINTERVAL && playerTurn == false ) {
         lc.clearDisplay(0);
         showMatrix(1);
       }
-      if (millis() - currentElapsedTime > showFigureInterval  && playerTurn == false && beginGame == true) {
+      if (millis() - currentElapsedTime > SHOWFIGUREINTERVAL  && playerTurn == false && beginGame == true) {
         lc.clearDisplay(0);
         showMatrix(0);
         lockedIn = false;
@@ -620,8 +611,8 @@ void showGameDisplay() {
   }
 }
 void joyStickSettings(int upperLimit, int step) {
-  xValue = analogRead(xPin);
-  if (xValue < minThreshold && joyMovedXSettings == false) {
+  xValue = analogRead(XPIN);
+  if (xValue < MINTHRESHOLD && joyMovedXSettings == false) {
     if (xPosSettings < upperLimit - 1) {
       xPosSettings += step;
     }
@@ -631,7 +622,7 @@ void joyStickSettings(int upperLimit, int step) {
     joyMovedXSettings = true;
   }
 
-  if (xValue > maxThreshold && joyMovedXSettings == false) {
+  if (xValue > MAXTHRESHOLD && joyMovedXSettings == false) {
     if (xPosSettings > step) {
       xPosSettings -= step;
     }
@@ -640,19 +631,19 @@ void joyStickSettings(int upperLimit, int step) {
     }
     joyMovedXSettings = true;
   }
-  if (xValue >= minThreshold && xValue <= maxThreshold) {
+  if (xValue >= MINTHRESHOLD && xValue <= MAXTHRESHOLD) {
     joyMovedXSettings = false;
   }
 }
 void showMatrix(int light) {
-  for (int coord = 0; coord < numberOfCoord; coord++) {
+  for (int coord = 0; coord < NUMBEROFCOORD; coord++) {
     matrix[figures[currentLevel - 1][coord][0]][figures[currentLevel - 1][coord][1]] = light;
     lc.setLed(0, figures[currentLevel - 1][coord][0], figures[currentLevel - 1][coord][1], light);
   }
 }
 void showPlayerMatrix(int light) {
-  for (int i = 0; i < matrixSize; i++) {
-    for (int j = 0; j < matrixSize; j++) {
+  for (int i = 0; i < MATRIXSIZE; i++) {
+    for (int j = 0; j < MATRIXSIZE; j++) {
       playerMatrix[i][j] = light;
     }
   }
@@ -660,9 +651,9 @@ void showPlayerMatrix(int light) {
 // Check if the player set a good position.
 // Otherwise decrease the lives number.
 void verifyMove(int x, int y) {
-  for (int coord = 0; coord < numberOfCoord; coord++) {
+  for (int coord = 0; coord < NUMBEROFCOORD; coord++) {
     if (figures[currentLevel - 1][coord][0] == x && figures[currentLevel - 1][coord][1] == y && playerMatrix[x][y] == 0) {
-      currentScore += scoreStep;
+      currentScore += SCORESTEP;
       playerMatrix[x][y] = 1;
       lc.setLed(0, x, y, matrix[x][y]);
       break;
@@ -698,7 +689,7 @@ void gameOver() {
   previousScore = -1;
   for(int thisNote = 0; thisNote < 8; thisNote++){
     int noteDuration = 1000 / noteDurations[thisNote];
-    tone(buzzerPin, melody[thisNote], noteDuration);
+    tone(BUZZERPIN, melody[thisNote], noteDuration);
     int pauseBetweenNotes = noteDuration * 1.30;
     delay(pauseBetweenNotes);
     noTone(pauseBetweenNotes);
@@ -706,7 +697,7 @@ void gameOver() {
 }
 // Check if the player remade the figure by verifying the marked positions
 int levelIsDone() {
-  for (int coord = 0; coord < numberOfCoord; coord++) {
+  for (int coord = 0; coord < NUMBEROFCOORD; coord++) {
     if (playerMatrix[figures[currentLevel - 1][coord][0]][figures[currentLevel - 1][coord][1]] == 0) {
       return 0;
     }
@@ -727,13 +718,13 @@ void isNewHighscore () {
     lcd.print(newScoreStr);
     lcd.setCursor(1, 1);
     lcd.print(F("New highscore!"));
-    if (millis() - introMillis > showGreetingInterval / 8) {
-    tone(buzzerPin, melody[indexAbout + 1], showGreetingInterval / 8);
+    if (millis() - introMillis > SHOWGREETINGINTERVAL / 8) {
+    tone(BUZZERPIN, melody[indexAbout + 1], SHOWGREETINGINTERVAL / 8);
     introMillis = millis();
     }  
   }
   //If a new highscore was established then show congratulation message for 5 seconds
-  if (newScore == 1 && millis() - currentTimeHighscore > showGreetingInterval) {
+  if (newScore == 1 && millis() - currentTimeHighscore > SHOWGREETINGINTERVAL) {
     lcd.clear();
     isInSetName = true;
     lockedIn = false;
@@ -756,9 +747,9 @@ void saveToMemory(String name, long long score) {
 // Ask the player if he wants to go to the next level
 void goNext() {
   lcd.setCursor(1, 0);
-  lcd.write(leftArrow);
+  lcd.write(LEFTARROW);
   lcd.setCursor(14, 0);
-  lcd.write(rightArrow);
+  lcd.write(RIGHTARROW);
   lcd.setCursor(6, 1);
   lcd.print(F("Continue?"));
   joyStickMovement(2);
@@ -819,7 +810,7 @@ void goNext() {
     lcd.setCursor(2, 0);
     lcd.print(F("No"));
     lcd.setCursor(14, 0);
-    lcd.write(rightArrow);
+    lcd.write(RIGHTARROW);
     lcd.setCursor(6, 1);
     lcd.print(F("Continue?"));
     joyStickMovement(2);
@@ -831,7 +822,7 @@ void goNext() {
     lcd.setCursor(11, 0);
     lcd.print(F("Yes"));
     lcd.setCursor(1, 0);
-    lcd.write(leftArrow);
+    lcd.write(LEFTARROW);
     lcd.setCursor(6, 1);
     lcd.print(F("Continue?"));
     joyStickMovement(2);
@@ -844,11 +835,11 @@ void saveScore(int index) {
   lcd.print(F("OK"));
   if (lockedIn == false) {
     int lastXPos = xPos;
-    joyStickMovement(nameSize + 1);
+    joyStickMovement(NAMESIZE + 1);
     if (lastXPos != xPos) {
       lcd.clear();
     }
-    for (int i = 0 ; i < nameSize; i++) {
+    for (int i = 0 ; i < NAMESIZE; i++) {
       lcd.setCursor(i, 0);
       if ( i == xPos) {
         lcd.print(F("_"));
@@ -860,15 +851,15 @@ void saveScore(int index) {
     lcd.setCursor(4, 0);
     lcd.print(F("OK"));
     lcd.setCursor(0, 1);
-    lcd.write(leftArrow);
+    lcd.write(LEFTARROW);
     lcd.setCursor(15, 1);
-    lcd.write(rightArrow);
+    lcd.write(RIGHTARROW);
   }
   // If the button was pressed and the position is one for a letter,
   // Then clear the lcd and while changing the letter all the other letters disappear.
   else if (lockedIn == true && xPos != 4) {
     char lastPos = char(lettersArray[yPos]);
-    joyStickMovement(alphabetSize);
+    joyStickMovement(ALPHABETSIZE);
     if (lastPos != char(lettersArray[yPos])) {
       lcd.clear();
       lcd.setCursor(xPos, 0);
@@ -880,9 +871,9 @@ void saveScore(int index) {
     lcd.setCursor(15, 1);
     lcd.print(F(""));
     lcd.setCursor(15, 0);
-    lcd.write(upArrow);
+    lcd.write(UPARROW);
     lcd.setCursor(15, 1);
-    lcd.write(downArrow);
+    lcd.write(DOWNARROW);
   }
   // If the button was pressed and the player is on the last position("OK"),
   // Save the name and score in memory.
@@ -903,7 +894,7 @@ void saveScore(int index) {
 // Scrolling text for "About" section
 void showAbout() {
   if (indexAbout <= strlen(aboutInfo) - 16) {
-    if (millis() - currentAboutMillis > aboutInterval) {
+    if (millis() - currentAboutMillis > ABOUTINTERVAL) {
       showLetter(0, indexAbout);
       currentAboutMillis = millis();
       indexAbout += 1;
@@ -919,8 +910,8 @@ void showLetter(int start, int startLetter) {
 }
 // Turn on/off the leds on the matrix
 void showWholeMatrix(int light) {
-  for (int i = 0; i < matrixSize; i++) {
-    for (int j = 0; j < matrixSize; j++) {
+  for (int i = 0; i < MATRIXSIZE; i++) {
+    for (int j = 0; j < MATRIXSIZE; j++) {
       matrix[i][j] = light;
       lc.setLed(0, i, j, light);
     }
@@ -941,7 +932,7 @@ int readIntFromEEPROM(int address) {
   return (byte1 << 8) + byte2;
 }
 int getMaximum() {
-  for (int i = highScoreSize - 1; i >= 0; i--) {
+  for (int i = HIGHSCORESIZE - 1; i >= 0; i--) {
     Player* player = highScore[i];
     // If the current player obtained a new highscore
     if (currentScore > highScore[i]->getScore()) {
