@@ -8,9 +8,17 @@ Nerdy game which has the purpose to test your intelligence. Do you think you can
  - Settings: lets you set the starting level of the game, matrix brightness or the contrast and brightness LCD.
  - Highscore: top 3 best highscores read from the memory containing the name of the user and the score.
  - About: informations about the game (name, author and github link).
+  If one option is played once more after selected, then the player can scroll back through the menu.
   ### Submenu - settings
   Consists:
-  -
+  - Starting level: sets the level one player wants to start from.
+  - Contrast: sets the contrast of the lcd (increased by 10, the maximum reached value is 240).
+  - Brightness: sets the brightness of the lcd (increased by 10, the maximum reached value is 240).
+  - Matrix brightness: sets the intensity of the matrix (increased by 1, the maximum reached value is 15).
+  - Back: once pressed, displays the main menu.
+  The contrast, the brightness and matrix brightness are saved in EEPROM, so everytime the Arduino Uno restarts the values will remain the same.
+  ### Submenu - highscore
+  Displays the top 3 highscores, saved in EEPROM with the name and score reached by one. Entering into this setting occus only if he beats one of those already saved. 
 ## Implementation Details
 
 ## Game logic
